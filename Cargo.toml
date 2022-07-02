@@ -1,5 +1,2 @@
 [workspace]
-members = [
-    'tabua-engine',
-    'tictactoe',
-]
+members = ['tabua-engine', "tabua-utils", 'tictactoe']
