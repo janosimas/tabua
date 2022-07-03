@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use color_eyre::eyre::bail;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
-use tabua_utils::board::square_grid::SquareGridExt;
+use tabua_utils::board::square_grid::{SquareGrid, SquareGridExt};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CellState {
@@ -28,14 +28,14 @@ impl Display for CellState {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct TicTacToeState {
-    board: Vec<Vec<CellState>>,
+    board: SquareGrid<CellState>,
     required_sequence_length: usize,
     current_player: PlayerId,
 }
 
 impl Display for TicTacToeState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for row in &self.board {
+        for row in self.board.rows() {
             let row: String = row
                 .iter()
                 .map(ToString::to_string)
@@ -54,13 +54,11 @@ impl TicTacToeState {
             bail!("Impossible endgame condition: required sequence length must be less or equal the board length");
         }
 
-        let board = std::iter::repeat_with(|| {
-            std::iter::repeat(CellState::Empty)
-                .take(board_size)
-                .collect()
-        })
-        .take(board_size)
-        .collect();
+        let board = SquareGrid::builder()
+            .with_rows(board_size)
+            .with_columns(board_size)
+            .with_initial_value(CellState::Empty)
+            .build();
 
         Ok(Self {
             board,
@@ -115,11 +113,11 @@ impl TicTacToeEngine {
         };
 
         let board = &self.state.board;
-        let board_size = board.len();
+        let board_size = board.row_len();
         let required_sequence_length = self.state.required_sequence_length;
 
         // Check victory condition: row
-        for rows in board {
+        for rows in board.rows() {
             for window in rows.windows(required_sequence_length) {
                 if window.iter().all(|x| *x == player_mark) {
                     return EndGameState::Winner(player_id);
@@ -150,7 +148,7 @@ impl TicTacToeEngine {
 
     pub fn has_empty_cell(&self) -> bool {
         let mut has_empty_cell = true;
-        for row in &self.state.board {
+        for row in self.state.board.rows() {
             has_empty_cell = has_empty_cell && row.iter().any(|x| *x == CellState::Empty);
         }
 
@@ -188,7 +186,7 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
             } => {
                 let state = &self.state;
 
-                if *row >= state.board.len() || *column >= state.board[0].len() {
+                if *row >= state.board.row_len() || *column >= state.board.column_len() {
                     bail!("Invalid move, cell already marked");
                 }
 
@@ -196,7 +194,7 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
                     bail!("Playing out of turn");
                 }
 
-                if state.board[*row][*column] != CellState::Empty {
+                if *state.board.get(*row, *column) != CellState::Empty {
                     bail!("Invalid move, cell already marked");
                 }
             }
@@ -224,11 +222,11 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
 
                 match player_id {
                     PlayerId::Circle => {
-                        state.board[row][column] = CellState::Circle;
+                        *state.board.get_mut(row, column) = CellState::Circle;
                         self.state.current_player = PlayerId::Cross;
                     }
                     PlayerId::Cross => {
-                        state.board[row][column] = CellState::Cross;
+                        *state.board.get_mut(row, column) = CellState::Cross;
                         self.state.current_player = PlayerId::Circle;
                     }
                 }
@@ -295,7 +293,7 @@ mod tests {
 
         let expected = {
             let mut state = TicTacToeState::default();
-            state.board[0][0] = CellState::Cross;
+            *state.board.get_mut(0, 0) = CellState::Cross;
             state.current_player = PlayerId::Circle;
             state
         };
@@ -326,8 +324,8 @@ mod tests {
 
         let expected = {
             let mut state = TicTacToeState::default();
-            state.board[0][0] = CellState::Cross;
-            state.board[1][0] = CellState::Circle;
+            *state.board.get_mut(0, 0) = CellState::Cross;
+            *state.board.get_mut(1, 0) = CellState::Circle;
             state.current_player = PlayerId::Cross;
             state
         };
@@ -378,11 +376,11 @@ mod tests {
     async fn player_cross_victory_row() {
         let mut engine = TicTacToeEngine::new(TicTacToeState::default());
         assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
-        engine.state.board = vec![
+        engine.state.board = SquareGrid::new(vec![
             vec![CellState::Cross, CellState::Cross, CellState::Cross],
             vec![CellState::Empty, CellState::Empty, CellState::Empty],
             vec![CellState::Empty, CellState::Empty, CellState::Empty],
-        ];
+        ]);
         assert_eq!(
             engine.results().await.unwrap(),
             EndGameState::Winner(PlayerId::Cross)
@@ -393,11 +391,11 @@ mod tests {
     async fn player_cross_victory_column() {
         let mut engine = TicTacToeEngine::new(TicTacToeState::default());
         assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
-        engine.state.board = vec![
+        engine.state.board = SquareGrid::new(vec![
             vec![CellState::Cross, CellState::Empty, CellState::Empty],
             vec![CellState::Cross, CellState::Empty, CellState::Empty],
             vec![CellState::Cross, CellState::Empty, CellState::Empty],
-        ];
+        ]);
         assert_eq!(
             engine.results().await.unwrap(),
             EndGameState::Winner(PlayerId::Cross)
@@ -408,11 +406,11 @@ mod tests {
     async fn player_circle_victory_row() {
         let mut engine = TicTacToeEngine::new(TicTacToeState::default());
         assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
-        engine.state.board = vec![
+        engine.state.board = SquareGrid::new(vec![
             vec![CellState::Empty, CellState::Empty, CellState::Empty],
             vec![CellState::Circle, CellState::Circle, CellState::Circle],
             vec![CellState::Empty, CellState::Empty, CellState::Empty],
-        ];
+        ]);
         assert_eq!(
             engine.results().await.unwrap(),
             EndGameState::Winner(PlayerId::Circle)
@@ -423,11 +421,11 @@ mod tests {
     async fn player_circle_victory_column() {
         let mut engine = TicTacToeEngine::new(TicTacToeState::default());
         assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
-        engine.state.board = vec![
+        engine.state.board = SquareGrid::new(vec![
             vec![CellState::Empty, CellState::Circle, CellState::Empty],
             vec![CellState::Empty, CellState::Circle, CellState::Empty],
             vec![CellState::Empty, CellState::Circle, CellState::Empty],
-        ];
+        ]);
         assert_eq!(
             engine.results().await.unwrap(),
             EndGameState::Winner(PlayerId::Circle)
@@ -438,11 +436,11 @@ mod tests {
     async fn no_moves_available() {
         let mut engine = TicTacToeEngine::new(TicTacToeState::default());
         assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
-        engine.state.board = vec![
+        engine.state.board = SquareGrid::new(vec![
             vec![CellState::Circle, CellState::Cross, CellState::Circle],
             vec![CellState::Cross, CellState::Cross, CellState::Circle],
             vec![CellState::Circle, CellState::Circle, CellState::Cross],
-        ];
+        ]);
         let action = Action::MarkBoard {
             player_id: PlayerId::Circle,
             pos: Position::new(0, 0),
