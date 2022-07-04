@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use serde::{Deserialize, Serialize};
 
 pub type RowIterator<'a, T> = std::slice::Iter<'a, Vec<T>>;
@@ -13,8 +15,8 @@ pub trait SquareGridExt<'a, T> {
     fn rows(&self) -> RowIterator<T>;
     fn columns(&self) -> ColumnIterator<T>;
 
-    fn get(&'a self, row: usize, col: usize) -> &'a T;
-    fn get_mut(&'a mut self, row: usize, col: usize) -> &'a mut T;
+    fn get(&'a self, row: usize, col: usize) -> Option<&'a T>;
+    fn get_mut(&'a mut self, row: usize, col: usize) -> Option<&'a mut T>;
 }
 
 #[derive(Debug)]
@@ -88,35 +90,31 @@ impl<T: Clone> SquareGrid<T> {
 
 impl<'a, T> SquareGridExt<'a, T> for SquareGrid<T> {
     fn iter_row(&self, row: usize) -> RowCellIterator<T> {
-        self.grid[row].iter()
+        self.grid.iter_row(row)
     }
     fn iter_column(&self, col: usize) -> ColumnCellIterator<T> {
-        ColumnCellIterator {
-            board: self,
-            col,
-            row: 0,
-        }
+        self.grid.iter_column(col)
     }
 
     fn row_len(&self) -> usize {
-        self.grid.len()
+        self.grid.row_len()
     }
     fn column_len(&self) -> usize {
-        self.grid[0].len()
+        self.grid.column_len()
     }
 
     fn rows(&self) -> RowIterator<T> {
-        self.grid.iter()
+        self.grid.rows()
     }
     fn columns(&self) -> ColumnIterator<T> {
-        ColumnIterator::new(self)
+        self.grid.columns()
     }
 
-    fn get(&'a self, row: usize, col: usize) -> &'a T {
-        &self.grid[row][col]
+    fn get(&'a self, row: usize, col: usize) -> Option<&'a T> {
+        self.grid.get(row, col)
     }
-    fn get_mut(&'a mut self, row: usize, col: usize) -> &'a mut T {
-        &mut self.grid[row][col]
+    fn get_mut(&'a mut self, row: usize, col: usize) -> Option<&'a mut T> {
+        self.grid.get_mut(row, col)
     }
 }
 
@@ -125,17 +123,17 @@ impl<'a, T> SquareGridExt<'a, T> for Vec<Vec<T>> {
         self[row].iter()
     }
     fn iter_column(&self, col: usize) -> ColumnCellIterator<T> {
-        ColumnCellIterator {
-            board: self,
-            col,
-            row: 0,
-        }
+        ColumnCellIterator::new(self, col)
     }
 
     fn row_len(&self) -> usize {
         self.len()
     }
     fn column_len(&self) -> usize {
+        if self.len() == 0 {
+            return 0;
+        }
+
         self[0].len()
     }
 
@@ -146,11 +144,11 @@ impl<'a, T> SquareGridExt<'a, T> for Vec<Vec<T>> {
         ColumnIterator::new(self)
     }
 
-    fn get(&'a self, row: usize, col: usize) -> &'a T {
-        &self[row][col]
+    fn get(&'a self, row: usize, col: usize) -> Option<&'a T> {
+        self.deref().get(row)?.get(col)
     }
-    fn get_mut(&'a mut self, row: usize, col: usize) -> &'a mut T {
-        &mut self[row][col]
+    fn get_mut(&'a mut self, row: usize, col: usize) -> Option<&'a mut T> {
+        self.deref_mut().get_mut(row)?.get_mut(col)
     }
 }
 
@@ -170,7 +168,7 @@ impl<'a, T> Iterator for ColumnIterator<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         let mut result = Vec::with_capacity(self.board.column_len());
         for col in 0..self.board.column_len() {
-            result.push(self.board.get(self.row, col));
+            result.push(self.board.get(self.row, col).expect("inside column range"));
         }
 
         self.row += 1;
@@ -184,11 +182,17 @@ pub struct ColumnCellIterator<'a, T> {
     row: usize,
 }
 
+impl<'a, T> ColumnCellIterator<'a, T> {
+    pub fn new(board: &'a dyn SquareGridExt<'a, T>, col: usize) -> Self {
+        Self { board, col, row: 0 }
+    }
+}
+
 impl<'a, T> Iterator for ColumnCellIterator<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
         let result = self.board.get(self.row, self.col);
         self.row += 1;
-        Some(result)
+        result
     }
 }
