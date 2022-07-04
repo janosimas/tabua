@@ -194,7 +194,7 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
                     bail!("Playing out of turn");
                 }
 
-                if *state.board.get(*row, *column) != CellState::Empty {
+                if *state.board.get(*row, *column).unwrap() != CellState::Empty {
                     bail!("Invalid move, cell already marked");
                 }
             }
@@ -222,11 +222,11 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
 
                 match player_id {
                     PlayerId::Circle => {
-                        *state.board.get_mut(row, column) = CellState::Circle;
+                        *state.board.get_mut(row, column).unwrap() = CellState::Circle;
                         self.state.current_player = PlayerId::Cross;
                     }
                     PlayerId::Cross => {
-                        *state.board.get_mut(row, column) = CellState::Cross;
+                        *state.board.get_mut(row, column).unwrap() = CellState::Cross;
                         self.state.current_player = PlayerId::Circle;
                     }
                 }
@@ -293,7 +293,7 @@ mod tests {
 
         let expected = {
             let mut state = TicTacToeState::default();
-            *state.board.get_mut(0, 0) = CellState::Cross;
+            *state.board.get_mut(0, 0).unwrap() = CellState::Cross;
             state.current_player = PlayerId::Circle;
             state
         };
@@ -324,8 +324,8 @@ mod tests {
 
         let expected = {
             let mut state = TicTacToeState::default();
-            *state.board.get_mut(0, 0) = CellState::Cross;
-            *state.board.get_mut(1, 0) = CellState::Circle;
+            *state.board.get_mut(0, 0).unwrap() = CellState::Cross;
+            *state.board.get_mut(1, 0).unwrap() = CellState::Circle;
             state.current_player = PlayerId::Cross;
             state
         };
