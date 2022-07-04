@@ -142,6 +142,14 @@ impl TicTacToeEngine {
         }
 
         // TODO: victory condition: diagonal
+        for r in 0..board_size {
+            for c in 0..board_size {
+                let mut count = 0;
+                if *board.get(r, c).unwrap() == player_mark {
+                    
+                }
+            }
+        }
 
         EndGameState::GameNotOver
     }
@@ -403,6 +411,21 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn player_cross_victory_diagonal() {
+        let mut engine = TicTacToeEngine::new(TicTacToeState::default());
+        assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
+        engine.state.board = SquareGrid::new(vec![
+            vec![CellState::Cross, CellState::Empty, CellState::Empty],
+            vec![CellState::Empty, CellState::Cross, CellState::Empty],
+            vec![CellState::Empty, CellState::Empty, CellState::Cross],
+        ]);
+        assert_eq!(
+            engine.results().await.unwrap(),
+            EndGameState::Winner(PlayerId::Cross)
+        );
+    }
+
+    #[tokio::test]
     async fn player_circle_victory_row() {
         let mut engine = TicTacToeEngine::new(TicTacToeState::default());
         assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
@@ -425,6 +448,21 @@ mod tests {
             vec![CellState::Empty, CellState::Circle, CellState::Empty],
             vec![CellState::Empty, CellState::Circle, CellState::Empty],
             vec![CellState::Empty, CellState::Circle, CellState::Empty],
+        ]);
+        assert_eq!(
+            engine.results().await.unwrap(),
+            EndGameState::Winner(PlayerId::Circle)
+        );
+    }
+
+    #[tokio::test]
+    async fn player_circle_victory_diagonal() {
+        let mut engine = TicTacToeEngine::new(TicTacToeState::default());
+        assert_eq!(engine.results().await.unwrap(), EndGameState::GameNotOver);
+        engine.state.board = SquareGrid::new(vec![
+            vec![CellState::Empty, CellState::Empty, CellState::Circle],
+            vec![CellState::Empty, CellState::Circle, CellState::Empty],
+            vec![CellState::Circle, CellState::Empty, CellState::Empty],
         ]);
         assert_eq!(
             engine.results().await.unwrap(),
