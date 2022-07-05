@@ -130,7 +130,7 @@ impl<'a, T> SquareGridExt<'a, T> for Vec<Vec<T>> {
         self.len()
     }
     fn column_len(&self) -> usize {
-        if self.len() == 0 {
+        if self.is_empty() {
             return 0;
         }
 
