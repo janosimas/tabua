@@ -141,12 +141,41 @@ impl TicTacToeEngine {
             }
         }
 
-        // TODO: victory condition: diagonal
-        for r in 0..board_size {
-            for c in 0..board_size {
+        // Check victory condition: diagonals
+        for r in 0..board.row_len() {
+            for c in 0..board.column_len() {
                 let mut count = 0;
-                if *board.get(r, c).unwrap() == player_mark {
-                    
+                for (row, col) in (r..board.row_len()).zip(c..board.column_len()) {
+                    if let Some(mark) = board.get(row, col) {
+                        if *mark == player_mark {
+                            count += 1;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                if count == required_sequence_length {
+                    return EndGameState::Winner(player_id);
+                }
+
+                let mut count = 0;
+                for (row, col) in (0..=r).zip((0..=c).rev()) {
+                    if let Some(mark) = board.get(row, col) {
+                        if *mark == player_mark {
+                            count += 1;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+
+                if count == required_sequence_length {
+                    return EndGameState::Winner(player_id);
                 }
             }
         }
