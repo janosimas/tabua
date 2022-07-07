@@ -52,7 +52,7 @@ pub enum CellType {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CellAdjacency {
     Side,
-    Vertex,
+    SideAndVertex,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -121,18 +121,22 @@ impl<'a, T> GridExt<'a, T> for Grid<T> {
                 (0, -1),         (0, 1),
                         ( 1, 0)],
             #[rustfmt::skip]
-            (CellType::Square, CellAdjacency::Vertex) => vec![
+            (CellType::Square, CellAdjacency::SideAndVertex) => vec![
                 (-1, -1), (-1, 0), (-1, 1),
                 ( 0, -1),          ( 0, 1),
                 ( 1, -1), ( 1, 0), ( 1, 1),
             ],
             (CellType::Hex, CellAdjacency::Side) => todo!(),
-            (CellType::Hex, CellAdjacency::Vertex) => todo!(),
+            (CellType::Hex, CellAdjacency::SideAndVertex) => todo!(),
         }
     }
 
     fn adjacent_cells(&'a self, current: &Position2d) -> Vec<(Position2d, &'a T)> {
-        self.grid.adjacent_cells(current)
+        self.adjacencies()
+            .into_iter()
+            .filter_map(|diff| current.add(diff))
+            .filter_map(|p| Some((p, self.get(&p)?)))
+            .collect()
     }
 }
 

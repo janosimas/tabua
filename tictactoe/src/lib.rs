@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use color_eyre::eyre::bail;
 use color_eyre::Result;
 use serde::{Deserialize, Serialize};
-use tabua_utils::board::square_grid::{Grid, GridBuilder, GridExt};
+use tabua_utils::board::grid::{Grid, GridBuilder, GridExt};
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CellState {
