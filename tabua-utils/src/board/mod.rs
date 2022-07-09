@@ -1,1 +1,1 @@
-pub mod square_grid;
+pub mod grid;
