@@ -13,14 +13,14 @@ impl<T> BreadthFirstSearch for Grid<T> {
             .build();
 
         *explored.get_mut(root).unwrap() = true;
-        let mut v = vec![vec![root.clone()]];
+        let mut v = vec![vec![*root]];
         while let Some(path) = v.pop() {
             let p = path.last().unwrap();
             if *p == *goal {
                 return Some(path);
             }
 
-            for (next, _) in self.adjacent_cells(&p) {
+            for (next, _) in self.adjacent_cells(p) {
                 if let Some(false) = explored.get(&next) {
                     *explored.get_mut(&next).unwrap() = true;
 
