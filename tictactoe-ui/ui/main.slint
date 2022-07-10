@@ -1,0 +1,35 @@
+export Cell := Rectangle {
+    property <string> state;
+    property <int> pos_y;
+    property <int> pos_x;
+    callback clicked(int, int);
+
+    width: 64px;
+    height: 64px;
+    background: lightgray;
+    border-color: black;
+    border-width: 1px;
+    Text {
+        height: 100%;
+        width: 100%;
+        horizontal-alignment: center;
+        font-size: height * 0.9;
+        text: state;
+    }
+    TouchArea {
+        clicked => {
+            // Delegate to the user of this element
+            root.clicked(pos_y, pos_x);
+        }
+    }
+}
+
+export MainWindow := Window {
+    VerticalLayout {
+        HorizontalLayout {
+            Cell { state: "X"; }
+            Cell { state: "O"; }
+            Cell {  }
+        }
+    }
+}

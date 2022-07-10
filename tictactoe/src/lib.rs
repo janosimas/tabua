@@ -49,7 +49,7 @@ impl Display for TicTacToeState {
 }
 
 impl TicTacToeState {
-    fn new(board_size: usize, required_sequence_length: usize) -> Result<Self> {
+    pub fn new(board_size: usize, required_sequence_length: usize) -> Result<Self> {
         if required_sequence_length > board_size {
             bail!("Impossible endgame condition: required sequence length must be less or equal the board length");
         }
@@ -65,6 +65,18 @@ impl TicTacToeState {
             required_sequence_length,
             current_player: PlayerId::Cross,
         })
+    }
+
+    pub fn board(&self) -> &Grid<CellState> {
+        &self.board
+    }
+
+    pub fn required_sequence_length(&self) -> usize {
+        self.required_sequence_length
+    }
+
+    pub fn current_player(&self) -> PlayerId {
+        self.current_player
     }
 }
 
