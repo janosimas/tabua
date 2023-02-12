@@ -195,12 +195,13 @@ impl TicTacToeEngine {
     }
 
     pub fn has_empty_cell(&self) -> bool {
-        let mut has_empty_cell = true;
         for row in self.state.board.rows() {
-            has_empty_cell = has_empty_cell && row.iter().any(|x| *x == CellState::Empty);
+            if row.iter().any(|x| *x == CellState::Empty) {
+                return true;
+            }
         }
 
-        has_empty_cell
+        false
     }
 }
 
