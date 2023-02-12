@@ -7,11 +7,10 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1"
-color-eyre = "0.6"
+serde = { version = "1.0", features = ["derive"] }
 tabua-engine = { path = "../tabua-engine" }
 tabua-utils = { path = "../tabua-utils" }
-serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0.38"
 
 [dev-dependencies]
 tokio = { version = "1.19.2", features = ["rt", "macros"] }
-
