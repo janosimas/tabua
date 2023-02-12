@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use color_eyre::Result;
 use serde::{Deserialize, Serialize};
 
 #[async_trait]
@@ -9,14 +8,18 @@ pub trait Engine<'a> {
     type PlayerId: Serialize + Deserialize<'a>;
     type Action: Serialize + Deserialize<'a>;
     type EndGame: Serialize + Deserialize<'a>;
+    type Error;
 
-    async fn public_state(&self) -> Result<&Self::PublicState>;
-    async fn private_state(&self, user: &Self::PlayerId) -> Result<Vec<Self::PrivateState>>;
+    async fn public_state(&self) -> Result<&Self::PublicState, Self::Error>;
+    async fn private_state(
+        &self,
+        user: &Self::PlayerId,
+    ) -> Result<Vec<Self::PrivateState>, Self::Error>;
 
-    async fn validate_action(&self, action: &Self::Action) -> Result<()>;
-    async fn apply_action(&mut self, action: Self::Action) -> Result<()>;
+    async fn validate_action(&self, action: &Self::Action) -> Result<(), Self::Error>;
+    async fn apply_action(&mut self, action: Self::Action) -> Result<(), Self::Error>;
 
-    async fn current_players(&self) -> Result<Vec<Self::PlayerId>>;
+    async fn current_players(&self) -> Result<Vec<Self::PlayerId>, Self::Error>;
 
-    async fn results(&self) -> Result<Self::EndGame>;
+    async fn results(&self) -> Result<Self::EndGame, Self::Error>;
 }
