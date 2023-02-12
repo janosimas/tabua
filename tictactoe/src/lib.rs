@@ -220,6 +220,7 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
     type PlayerId = PlayerId;
     type Action = Action;
     type EndGame = EndGameState;
+    type CurrentPlayers = PlayerId;
     type Error = Error;
 
     async fn public_state(&self) -> Result<&Self::PublicState> {
@@ -287,8 +288,8 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
         }
     }
 
-    async fn current_players(&self) -> Result<Vec<Self::PlayerId>> {
-        Ok(vec![self.state.current_player])
+    async fn current_players(&self) -> Result<Self::CurrentPlayers> {
+        Ok(self.state.current_player)
     }
 
     async fn results(&self) -> Result<Self::EndGame> {
