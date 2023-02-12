@@ -1,5 +1,4 @@
 #![feature(iter_intersperse)]
-#![feature(generic_associated_types)]
 
 use std::fmt::Display;
 
@@ -49,7 +48,7 @@ impl Display for TicTacToeState {
 }
 
 impl TicTacToeState {
-    fn new(board_size: usize, required_sequence_length: usize) -> Result<Self> {
+    pub fn new(board_size: usize, required_sequence_length: usize) -> Result<Self> {
         if required_sequence_length > board_size {
             bail!("Impossible endgame condition: required sequence length must be less or equal the board length");
         }
@@ -66,6 +65,18 @@ impl TicTacToeState {
             current_player: PlayerId::Cross,
         })
     }
+
+    pub fn board(&self) -> &Grid<CellState> {
+        &self.board
+    }
+
+    pub fn required_sequence_length(&self) -> usize {
+        self.required_sequence_length
+    }
+
+    pub fn current_player(&self) -> PlayerId {
+        self.current_player
+    }
 }
 
 impl Default for TicTacToeState {
@@ -80,7 +91,7 @@ pub enum PlayerId {
     Cross,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub struct Position {
     pub row: usize,
     pub column: usize,
@@ -92,7 +103,7 @@ impl Position {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 pub enum Action {
     MarkBoard { player_id: PlayerId, pos: Position },
 }
@@ -208,8 +219,8 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
     type Action = Action;
     type EndGame = EndGameState;
 
-    async fn public_state(&self) -> Result<Self::PublicState> {
-        Ok(self.state.clone())
+    async fn public_state(&self) -> Result<&Self::PublicState> {
+        Ok(&self.state)
     }
     async fn private_state(&self, _user: &Self::PlayerId) -> Result<Vec<Self::PrivateState>> {
         Ok(vec![])
@@ -312,7 +323,7 @@ mod tests {
         let current_state = engine.public_state().await.unwrap();
         println!("{current_state}");
 
-        assert_eq!(current_state, TicTacToeState::default());
+        assert_eq!(current_state, &TicTacToeState::default());
     }
 
     #[tokio::test]
@@ -336,7 +347,7 @@ mod tests {
         };
 
         println!("{new_state}");
-        assert_eq!(new_state, expected);
+        assert_eq!(new_state, &expected);
     }
 
     #[tokio::test]
@@ -368,7 +379,7 @@ mod tests {
         };
 
         println!("{new_state}");
-        assert_eq!(new_state, expected);
+        assert_eq!(new_state, &expected);
     }
 
     #[tokio::test]
