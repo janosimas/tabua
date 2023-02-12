@@ -3,10 +3,11 @@
 use std::fmt::Display;
 
 use async_trait::async_trait;
-use color_eyre::eyre::bail;
-use color_eyre::Result;
+use error::{Error, Result};
 use serde::{Deserialize, Serialize};
 use tabua_utils::board::grid::{Grid, GridBuilder, GridExt};
+
+pub mod error;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CellState {
@@ -50,7 +51,7 @@ impl Display for TicTacToeState {
 impl TicTacToeState {
     pub fn new(board_size: usize, required_sequence_length: usize) -> Result<Self> {
         if required_sequence_length > board_size {
-            bail!("Impossible endgame condition: required sequence length must be less or equal the board length");
+            return Err(Error::InvalidGameCondition);
         }
 
         let board = GridBuilder::new_square_grid()
@@ -219,6 +220,7 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
     type PlayerId = PlayerId;
     type Action = Action;
     type EndGame = EndGameState;
+    type Error = Error;
 
     async fn public_state(&self) -> Result<&Self::PublicState> {
         Ok(&self.state)
@@ -236,25 +238,25 @@ impl tabua_engine::Engine<'_> for TicTacToeEngine {
                 let state = &self.state;
 
                 if *row >= state.board.row_len() || *column >= state.board.column_len() {
-                    bail!("Invalid move, cell already marked");
+                    return Err(Error::CellAlreadyMarked);
                 }
 
                 if state.current_player != *player_id {
-                    bail!("Playing out of turn");
+                    return Err(Error::NotPlayerTurn);
                 }
 
                 if *state.board.get(&(*row, *column)).unwrap() != CellState::Empty {
-                    bail!("Invalid move, cell already marked");
+                    return Err(Error::CellAlreadyMarked);
                 }
             }
         }
 
         if !self.has_empty_cell() {
-            bail!("No moves available")
+            return Err(Error::NoMovesAvailable);
         }
 
         if self.results().await? != EndGameState::GameNotOver {
-            bail!("Game over");
+            return Err(Error::GameOver);
         }
 
         Ok(())
