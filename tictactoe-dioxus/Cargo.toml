@@ -1,0 +1,22 @@
+[package]
+name = "tictactoe-dioxus"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1"
+chrono = "0.4.23"
+color-eyre = "0.6"
+dioxus = "0.3.1"
+dioxus-desktop = "0.3.0"
+fern = "0.6.1"
+futures-util = "0.3.26"
+log = "0.4.17"
+once_cell = "1.17.0"
+serde = { version = "1.0", features = ["derive"] }
+tabua-engine = { path = "../tabua-engine" }
+tabua-utils = { path = "../tabua-utils" }
+tictactoe = { path = "../tictactoe" }
+tokio = { version = "1.19.2", features = ["rt-multi-thread", "rt", "macros"] }
