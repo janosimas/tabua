@@ -1,3 +1,5 @@
+#![feature(associated_type_defaults)]
+
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
@@ -8,6 +10,7 @@ pub trait Engine<'a> {
     type PlayerId: Serialize + Deserialize<'a>;
     type Action: Serialize + Deserialize<'a>;
     type EndGame: Serialize + Deserialize<'a>;
+    type CurrentPlayers = Vec<Self::PlayerId>;
     type Error;
 
     async fn public_state(&self) -> Result<&Self::PublicState, Self::Error>;
@@ -19,7 +22,7 @@ pub trait Engine<'a> {
     async fn validate_action(&self, action: &Self::Action) -> Result<(), Self::Error>;
     async fn apply_action(&mut self, action: Self::Action) -> Result<(), Self::Error>;
 
-    async fn current_players(&self) -> Result<Vec<Self::PlayerId>, Self::Error>;
+    async fn current_players(&self) -> Result<Self::CurrentPlayers, Self::Error>;
 
     async fn results(&self) -> Result<Self::EndGame, Self::Error>;
 }

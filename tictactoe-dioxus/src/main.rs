@@ -18,7 +18,7 @@ enum Signal {
 #[derive(Debug, Default)]
 struct UiState {
     game_state: Option<TicTacToeState>,
-    players: Option<Vec<PlayerId>>,
+    current_player: Option<PlayerId>,
 }
 
 fn main() {
@@ -42,7 +42,7 @@ async fn engine_service(mut rx: UnboundedReceiver<Signal>, ui_state: UseState<Ui
         }
 
         let current_state = engine.public_state().await;
-        let current_players = engine.current_players().await;
+        let current_player = engine.current_players().await;
 
         let mut new_ui_state = UiState::default();
 
@@ -53,9 +53,9 @@ async fn engine_service(mut rx: UnboundedReceiver<Signal>, ui_state: UseState<Ui
             warn!("Fail to get new state");
         }
 
-        if let Ok(current_players) = current_players {
+        if let Ok(current_players) = current_player {
             info!("Current players set");
-            new_ui_state.players = Some(current_players);
+            new_ui_state.current_player = Some(current_players);
         } else {
             warn!("Fail to get current players");
         }
@@ -79,13 +79,13 @@ fn app(cx: Scope) -> Element {
         cx.render(rsx!(div {
             Grid {
                 state: board,
-                player: if let Some(ref players) = &ui_state.players {
-                    players[0]
+                player: if let Some(players) = &ui_state.current_player {
+                    *players
                 } else {
                     PlayerId::Cross
                 }
             }
-            p { format!("{:?}", ui_state.players) }
+            p { format!("{:?}", ui_state.current_player) }
         }))
     } else {
         cx.render(rsx!(
