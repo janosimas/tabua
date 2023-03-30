@@ -76,7 +76,7 @@ fn app(cx: Scope) -> Element {
         .as_ref()
         .map(|state| state.board().clone())
     {
-        cx.render(rsx!(div {
+        cx.render(rsx!(
             Grid {
                 state: board,
                 player: if let Some(players) = &ui_state.current_player {
@@ -86,7 +86,7 @@ fn app(cx: Scope) -> Element {
                 }
             }
             p { format!("{:?}", ui_state.current_player) }
-        }))
+        ))
     } else {
         cx.render(rsx!(
             h2 { "error getting game board" }
