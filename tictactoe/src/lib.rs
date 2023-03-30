@@ -92,7 +92,7 @@ pub enum PlayerId {
     Cross,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Position {
     pub row: usize,
     pub column: usize,
@@ -104,7 +104,7 @@ impl Position {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Action {
     MarkBoard { player_id: PlayerId, pos: Position },
 }
